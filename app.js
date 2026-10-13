@@ -186,7 +186,7 @@
           if (texturePath.includes("/")) { skipped++; continue; }
           const name = mapTexture(path);
           if (!name) { unmapped.push(path); continue; }
-          await addTexture(file, name, target, mapped, unmapped, usedTargets);
+          await addTexture(file, name, target, packName, mapped, unmapped, usedTargets);
           continue;
         }
 
@@ -198,7 +198,7 @@
         }
         const name = mapTexture(path);
         if (!name) { unmapped.push(path); continue; }
-        await addTexture(file, name, target, mapped, unmapped, usedTargets);
+        await addTexture(file, name, target, packName, mapped, unmapped, usedTargets);
       }
 
       if ($("include-css").checked) {
@@ -226,7 +226,7 @@
     }
   });
 
-  async function addTexture(file, name, target, mapped, unmapped, usedTargets) {
+  async function addTexture(file, name, target, packName, mapped, unmapped, usedTargets) {
     const targetName = name + ".png";
     if (usedTargets.has(targetName)) {
       unmapped.push(file.name + " (duplicate target name: " + targetName + ")");
@@ -236,20 +236,18 @@
     const blob = await file.async("blob");
     // Bloxd texture packs conventionally use PNG. Keep PNGs untouched; convert other formats only if browser canvas supports them.
     if (/\.png$/i.test(file.name)) {
-      target.file(`PLACEHOLDER`, ""); // removed immediately; keeps no source path from being used
-      target.remove("PLACEHOLDER");
-      target.file("textures/" + targetName, blob);
+      target.file(packName + "/textures/" + targetName, blob);
     } else {
       try {
         const png = await toPng(blob);
-        target.file("textures/" + targetName, png);
+        target.file(packName + "/textures/" + targetName, png);
       } catch {
         unmapped.push(file.name + " (could not convert to PNG)");
         usedTargets.delete(targetName);
         return;
       }
     }
-    mapped.push(file.name + " → textures/" + targetName);
+    mapped.push(file.name + " → " + packName + "/textures/" + targetName);
   }
 
   function toPng(blob) {
