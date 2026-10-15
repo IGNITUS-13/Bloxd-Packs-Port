@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id), form=$("porter-form"), input=$("pack-fi
 let selected=null, output=null;
 const aliases={"short_grass":"grass","grass_block_top":"grass_top","grass_block_side":"grass_side","oak_log":"log_oak","oak_log_top":"log_oak_top","spruce_log":"log_spruce","birch_log":"log_birch","jungle_log":"log_jungle","acacia_log":"log_acacia","dark_oak_log":"log_dark_oak","water_still":"water","lava_still":"lava","bow_standby":"bow","cooked_beef":"beef","wood_sword":"wooden_sword","wood_pickaxe":"wooden_pickaxe","wood_axe":"wooden_axe","wood_shovel":"wooden_shovel","wood_hoe":"wooden_hoe"};
 const setStatus=(s,k="")=>{status.textContent=s;status.className="status"+(k?" "+k:"");};
-const clean=s=>(s||"Bloxd-Pack").trim().replace(/[\\/:*?"<>|\x00-\x1f]/g,"-").replace(/\s+/g,"-").slice(0,60)||"Bloxd-Pack";
+const clean=s=>(s||"Bloxd-Pack").trim().replace(/[\/:*?"<>|\x00-\x1f]/g,"-").replace(/\s+/g,"-").slice(0,60)||"Bloxd-Pack";
 const stem=p=>p.split("/").pop().replace(/\.(png|jpe?g|webp)$/i,"").toLowerCase();
 const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
 function mapName(path,targets){let n=aliases[stem(path)]||stem(path);if(targets){if(targets.has(n.toLowerCase()))return n;let hits=[...targets].filter(t=>norm(t)===norm(n));return hits.length===1?hits[0]:null;}return /^[a-z0-9_. -]+$/i.test(n)?n:null;}
@@ -29,17 +29,17 @@ const itemModels=new Map([
 const normalizeItem=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
 const resolveItemModel=s=>{if(itemModels.has(s))return itemModels.get(s);const n=normalizeItem(s);for(const [key,value] of itemModels)if(normalizeItem(key)===n)return value;return null;};
 // Java title panorama ya viene en seis caras: convertirlas al layout exacto skyBoxes/default/*.png.
-const panoramaFaces=images.map(f=>({f,m:f.name.replace(/\\\\/g,"/").match(/(?:^|\\/)panorama_([0-5])\\.png$/i)})).filter(x=>x.m);
+const panoramaFaces=images.map(f=>({f,m:f.name.replace(/\\\/g,"/").match(/(?:^|\/)panorama_([0-5])\\.png$/i)})).filter(x=>x.m);
 if(panoramaFaces.length===6){
  const faceNames=["px","nx","py","ny","pz","nz"];
  for(const {f,m} of panoramaFaces){const face=faceNames[Number(m[1])];target.file("skyBoxes/default/"+face+".png",await f.async("uint8array"));counts.skyBoxes++;used.add("skyface:"+f.name);}
  mapped.push("Minecraft title panorama → skyBoxes/default/{px,nx,py,ny,pz,nz}.png");
 }
-for(const f of images){const p=f.name.replace(/\\\\/g,"/"),m=p.match(/(?:^|\\/)assets\\/minecraft\\/textures\\/(?:block|blocks|item|items)\\/(.+)\\.(png|jpe?g|webp)$/i),loose=p.match(/(?:^|\\/)textures\\/([^/]+)\\.(png|jpe?g|webp)$/i);
+for(const f of images){const p=f.name.replace(/\\\/g,"/"),m=p.match(/(?:^|\/)assets\/minecraft\/textures\/(?:block|blocks|item|items)\/(.+)\\.(png|jpe?g|webp)$/i),loose=p.match(/(?:^|\/)textures\/([^/]+)\\.(png|jpe?g|webp)$/i);
 if(used.has("skyface:"+f.name))continue;
-if(/(?:^|\\/)assets\\/minecraft\\/(?:optifine\\/sky|mcpatcher\\/sky)\\//i.test(p)&&/(?:sky|panorama|starfield|sunflare)/i.test(p)){try{const faces=await panoramaToCube(await f.async("blob"));for(const [face,png] of Object.entries(faces)){target.file("skyBoxes/default/"+face+".png",png);counts.skyBoxes++;}mapped.push(p+" → skyBoxes/default/{px,nx,py,ny,pz,nz}.png");}catch(err){unmapped.push(p+" (no se pudo convertir a cubemap: "+err.message+")");}continue;}
+if(/(?:^|\/)assets\/minecraft\/(?:optifine\/sky|mcpatcher\/sky)\//i.test(p)&&/(?:sky|panorama|starfield|sunflare)/i.test(p)){try{const faces=await panoramaToCube(await f.async("blob"));for(const [face,png] of Object.entries(faces)){target.file("skyBoxes/default/"+face+".png",png);counts.skyBoxes++;}mapped.push(p+" → skyBoxes/default/{px,nx,py,ny,pz,nz}.png");}catch(err){unmapped.push(p+" (no se pudo convertir a cubemap: "+err.message+")");}continue;}
 if(!m&&!loose){skipped++;continue;}const rel=m?m[1]:loose[1];if(rel.includes("/")){skipped++;continue;}const mappedName=mapName(p,null);if(!mappedName){unmapped.push(p+" (nombre de textura no válido)");continue;}const dest=mappedName+".png";if(used.has(dest)){unmapped.push(p+" (destino duplicado: "+dest+")");continue;}let blob=await f.async("blob");if(!/\\.png$/i.test(f.name)){try{blob=await toPng(blob);}catch{unmapped.push(p+" (no se pudo convertir a PNG)");continue;}}used.add(dest);target.file("textures/"+dest,blob);mapped.push(p+" → textures/"+dest);
-if(/(?:^|\\/)assets\\/minecraft\\/textures\\/(?:item|items)\\//i.test(p)){const modelName=resolveItemModel(stem(p));if(modelName){try{target.file("models/"+modelName+".glb",await makeItemGlb(blob,modelName));counts.models++;}catch(err){unmapped.push(p+" (GLB falló: "+err.message+")");}}else{unmapped.push(p+" (no existe un modelo equivalente confirmado en Bloxd; no se genera GLB)");}}
+if(/(?:^|\/)assets\/minecraft\/textures\/(?:item|items)\//i.test(p)){const modelName=resolveItemModel(stem(p));if(modelName){try{target.file("models/"+modelName+".glb",await makeItemGlb(blob,modelName));counts.models++;}catch(err){unmapped.push(p+" (GLB falló: "+err.message+")");}}else{unmapped.push(p+" (no existe un modelo equivalente confirmado en Bloxd; no se genera GLB)");}}
 }
 if($("include-css").checked)target.file("css/ported-interface.css",css(name,author));
 // Crear directorios requeridos por la estructura Bloxd sin inventar modelos o cielos convertidos.
