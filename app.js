@@ -29,13 +29,13 @@ const itemModels=new Map([
 const normalizeItem=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
 const resolveItemModel=s=>{if(itemModels.has(s))return itemModels.get(s);const n=normalizeItem(s);for(const [key,value] of itemModels)if(normalizeItem(key)===n)return value;return null;};
 // Java title panorama ya viene en seis caras: convertirlas al layout exacto skyBoxes/default/*.png.
-const panoramaFaces=images.map(f=>({f,m:f.name.replace(/\\\/g,"/").match(/(?:^|\/)panorama_([0-5])\\.png$/i)})).filter(x=>x.m);
+const panoramaFaces=images.map(f=>({f,m:f.name.replace(/\\/g,"/").match(/(?:^|\/)panorama_([0-5])\.png$/i)})).filter(x=>x.m);
 if(panoramaFaces.length===6){
  const faceNames=["px","nx","py","ny","pz","nz"];
  for(const {f,m} of panoramaFaces){const face=faceNames[Number(m[1])];target.file("skyBoxes/default/"+face+".png",await f.async("uint8array"));counts.skyBoxes++;used.add("skyface:"+f.name);}
  mapped.push("Minecraft title panorama → skyBoxes/default/{px,nx,py,ny,pz,nz}.png");
 }
-for(const f of images){const p=f.name.replace(/\\\/g,"/"),m=p.match(/(?:^|\/)assets\/minecraft\/textures\/(?:block|blocks|item|items)\/(.+)\\.(png|jpe?g|webp)$/i),loose=p.match(/(?:^|\/)textures\/([^/]+)\\.(png|jpe?g|webp)$/i);
+for(const f of images){const p=f.name.replace(/\\/g,"/"),m=p.match(/(?:^|\/)assets\/minecraft\/textures\/(?:block|blocks|item|items)\/(.+)\.(png|jpe?g|webp)$/i),loose=p.match(/(?:^|\/)textures\/([^/]+)\.(png|jpe?g|webp)$/i);
 if(used.has("skyface:"+f.name))continue;
 if(/(?:^|\/)assets\/minecraft\/(?:optifine\/sky|mcpatcher\/sky)\//i.test(p)&&/(?:sky|panorama|starfield|sunflare)/i.test(p)){try{const faces=await panoramaToCube(await f.async("blob"));for(const [face,png] of Object.entries(faces)){target.file("skyBoxes/default/"+face+".png",png);counts.skyBoxes++;}mapped.push(p+" → skyBoxes/default/{px,nx,py,ny,pz,nz}.png");}catch(err){unmapped.push(p+" (no se pudo convertir a cubemap: "+err.message+")");}continue;}
 if(!m&&!loose){skipped++;continue;}const rel=m?m[1]:loose[1];if(rel.includes("/")){skipped++;continue;}const mappedName=mapName(p,null);if(!mappedName){unmapped.push(p+" (nombre de textura no válido)");continue;}const dest=mappedName+".png";if(used.has(dest)){unmapped.push(p+" (destino duplicado: "+dest+")");continue;}let blob=await f.async("blob");if(!/\\.png$/i.test(f.name)){try{blob=await toPng(blob);}catch{unmapped.push(p+" (no se pudo convertir a PNG)");continue;}}used.add(dest);target.file("textures/"+dest,blob);mapped.push(p+" → textures/"+dest);
