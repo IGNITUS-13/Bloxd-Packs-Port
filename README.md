@@ -1,41 +1,36 @@
 # Bloxd Packs Port
 
-A browser-based MVP that converts a Minecraft Java resource-pack ZIP into a starter Bloxd.io texture-pack ZIP.
+Herramienta de navegador para portar recursos compatibles de packs de Minecraft Java a una estructura de pack para Bloxd.io. El procesamiento ocurre localmente; no necesitas subir un pack de referencia de Bloxd.
 
-## Run it
+## Funciones implementadas
 
-Open `index.html` in a browser or enable GitHub Pages for this repository. The app uses JSZip from jsDelivr, so an internet connection is needed to load that library. ZIP processing happens locally in the browser; files are not uploaded to a server.
+- Extrae texturas de bloques y las guarda en textures/.
+- Para imágenes de ítems en assets/minecraft/textures/item/ o items/, genera un archivo .glb con la textura incrustada y una geometría prismática sencilla en models/. Es un modelo aproximado 3D generado desde la imagen, no una reconstrucción exacta del objeto.
+- Detecta imágenes bajo assets/minecraft/optifine/sky/ (o assets/minecraft/sky/) cuyos nombres indican cielo/panorama y, si tienen relación 2:1, las convierte en seis PNG de cubemap en skyBoxes/default/: px.png, nx.png, py.png, ny.png, pz.png, nz.png.
+- Puede añadir un CSS editable de ejemplo en css/ported-interface.css.
+- Muestra informes de recursos procesados y omitidos.
 
-## Current features
+## Limitaciones importantes
 
-- Accepts a Java resource-pack ZIP.
-- Looks for images under `assets/minecraft/textures/block/` and `item/`, plus a simple flat `textures/` folder.
-- Renames recognized textures using a conservative alias table in `app.js`.
-- Exports a Bloxd-style folder with `textures/`, optional `css/ported-interface.css`, and a README.
-- Shows mapped, unmapped, and skipped-file reports.
+- Los modelos GLB son prismas texturizados automáticos. No reconstruyen la forma real de espadas, herramientas, armaduras u objetos complejos; la geometría necesita reglas específicas por tipo de ítem para mayor fidelidad.
+- Solo se convierten panoramas equirectangulares 2:1 detectados en rutas de cielo reconocidas. Los formatos de cielo por capas, animados u otros diseños no se convierten automáticamente.
+- Los sprites de GUI de Minecraft no se convierten automáticamente en CSS de inventario de Bloxd. Los selectores CSS son ejemplos y deben probarse.
+- Los nombres de textura de Java no siempre coinciden con los que Bloxd admite; el reporte identifica lo que se pudo exportar, pero no garantiza compatibilidad total dentro del juego.
+- Los archivos de animación .mcmeta, atlas, shaders, OptiFine y modelos JSON no se interpretan para generar modelos.
 
-## Important limitations
+## Uso
 
-This is a first MVP, not a complete converter. Minecraft Java and Bloxd.io use different texture names and asset/UI systems. A successful ZIP export does not guarantee that every texture is recognized by Bloxd.
+Abre index.html o la página de GitHub Pages, elige el ZIP Java, pon el nombre del pack y pulsa Convertir. Descarga el ZIP resultante y prueba los recursos en Bloxd.io.
 
-- Many Java texture names will need an explicit mapping to Bloxd's supported names.
-- Atlases, animated textures, connected textures, OptiFine features, shaders, fonts, models, and blockstate/model JSON are not converted.
-- Java GUI textures (inventory panels, slot frames, hotbar, icons) are image sprites, while Bloxd's inventory is rendered through web UI/CSS. The tool therefore provides an editable CSS starter rather than pretending Java GUI images can be converted automatically. The CSS selectors are examples/placeholders and must be verified against Bloxd's current UI.
-- PNG assets are kept as-is. JPG/WebP assets are converted to PNG where the browser can decode them.
-- This tool does not include Minecraft or Bloxd assets. Only assets supplied by the user are processed.
+Se usa JSZip desde jsDelivr, así que hace falta conexión a internet para cargar la librería.
 
-## Next development steps
+## Estructura
 
-1. Build a verified mapping list from Bloxd's supported texture names.
-2. Add a custom mapping JSON upload/editor.
-3. Add preview thumbnails and dimension checks.
-4. Add a separate inventory CSS editor with tested Bloxd selectors.
-5. Add better support for nested asset paths, animation metadata, and pack.mcmeta validation.
+- textures/ — texturas portadas
+- models/ — modelos GLB aproximados para ítems
+- skyBoxes/default/ — caras del cubemap generado
+- css/ — CSS de ejemplo opcional
 
-## Development
+## Aviso
 
-No build step is required. Files: `index.html`, `style.css`, `app.js`.
-
-## Disclaimer
-
-Minecraft is a trademark of Microsoft/Mojang and Bloxd.io is a separate game. This community tool is not affiliated with either.
+Minecraft es una marca de Microsoft/Mojang y Bloxd.io es un juego independiente. Este proyecto comunitario no está afiliado a ninguno.
